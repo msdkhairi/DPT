@@ -1,3 +1,9 @@
+## Evaluation V2
+```python run_monodepth.py --input_path="/home/data/kitti" --data_filenames_path="eigen_benchmark/test_list.txt" --output_path="output_monodepth" --model_type=dpt_hybrid_kitti --kitti_crop --absolute_depth --no-optimize``` 
+
+
+```python ./eval_with_pngs.py --pred_path ./output_monodepth/ --gt_path /home/data/kitti --dataset kitti --min_depth_eval 1e-3 --max_depth_eval 80 --garg_crop --do_kb_crop --data_filenames_path="eigen_benchmark/test_list.txt"```
+
 ## Vision Transformers for Dense Prediction
 
 This repository contains code and models for our [paper](https://arxiv.org/abs/2103.13413):
