@@ -168,14 +168,15 @@ def resize_depth(depth, width, height):
     return depth_resized
 
 
-def write_depth(path, depth, bits=1, absolute_depth=False):
+def write_depth(path, depth, bits=1, absolute_depth=False, do_write_pfm=True):
     """Write depth map to pfm and png file.
 
     Args:
         path (str): filepath without extension
         depth (array): depth
     """
-    write_pfm(path + ".pfm", depth.astype(np.float32))
+    if do_write_pfm:
+        write_pfm(path + ".pfm", depth.astype(np.float32))
 
     if absolute_depth:
         out = depth
