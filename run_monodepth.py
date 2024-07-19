@@ -14,10 +14,12 @@ from dpt.models import DPTDepthModel
 from dpt.midas_net import MidasNet_large
 from dpt.transforms import Resize, NormalizeImage, PrepareForNet
 
+from tqdm import tqdm
+
 #from util.misc import visualize_attention
 
 
-def run(input_path, output_path, model_path, model_type="dpt_hybrid", optimize=True):
+def run(input_path, data_filenames_path, output_path, model_path, model_type="dpt_hybrid", optimize=True):
     """Run MonoDepthNN to compute depth maps.
 
     Args:
@@ -117,18 +119,21 @@ def run(input_path, output_path, model_path, model_type="dpt_hybrid", optimize=T
     model.to(device)
 
     # get input
-    img_names = glob.glob(os.path.join(input_path, "*"))
+    # img_names = glob.glob(os.path.join(input_path, "*"))
+    with open(data_filenames_path, "r") as file:
+        img_names = [os.path.join(input_path, line.split()[0][1:]) for line in file]
     num_images = len(img_names)
 
     # create output folder
     os.makedirs(output_path, exist_ok=True)
 
     print("start processing")
-    for ind, img_name in enumerate(img_names):
+    # for ind, img_name in enumerate(img_names):
+    for img_name in tqdm(img_names):
         if os.path.isdir(img_name):
             continue
 
-        print("  processing {} ({}/{})".format(img_name, ind + 1, num_images))
+        # print("  processing {} ({}/{})".format(img_name, ind + 1, num_images))
         # input
 
         img = util.io.read_image(img_name)
@@ -168,10 +173,14 @@ def run(input_path, output_path, model_path, model_type="dpt_hybrid", optimize=T
             if model_type == "dpt_hybrid_nyu":
                 prediction *= 1000.0
 
+        # filename = os.path.join(
+        #     output_path, os.path.splitext(os.path.basename(img_name))[0]
+        # )
         filename = os.path.join(
-            output_path, os.path.splitext(os.path.basename(img_name))[0]
-        )
-        util.io.write_depth(filename, prediction, bits=2, absolute_depth=args.absolute_depth)
+            output_path, os.path.splitext(img_name)[0][1:]).replace(input_path, "")
+        output_dir = os.path.dirname(filename)
+        os.makedirs(output_dir, exist_ok=True)
+        util.io.write_depth(filename, prediction, bits=2, absolute_depth=args.absolute_depth, do_write_pfm=False)
 
     print("finished")
 
@@ -181,6 +190,13 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-i", "--input_path", default="input", help="folder with input images"
+    )
+    
+    parser.add_argument(
+        "-d",
+        "--data_filenames_path",
+        default="data_filenames.txt",
+        help="path to data filenames",
     )
 
     parser.add_argument(
@@ -231,6 +247,7 @@ if __name__ == "__main__":
     # compute depth maps
     run(
         args.input_path,
+        args.data_filenames_path,
         args.output_path,
         args.model_weights,
         args.model_type,
