@@ -43,6 +43,7 @@ parser.add_argument('--garg_crop',                       help='if set, crops acc
 parser.add_argument('--min_depth_eval',      type=float, help='minimum depth for evaluation', default=1e-3)
 parser.add_argument('--max_depth_eval',      type=float, help='maximum depth for evaluation', default=80)
 parser.add_argument('--do_kb_crop',                      help='if set, crop input images as kitti benchmark images', action='store_true')
+parser.add_argument('--data_filenames_path', type=str,   help='path to the file containing the data filenames', required=True)
 
 args = parser.parse_args()
 
@@ -76,20 +77,30 @@ def test():
     gt_depths = []
     missing_ids = set()
     pred_filenames = []
+    gt_filenames = []
 
-    for root, dirnames, filenames in os.walk(args.pred_path):
-        for pred_filename in fnmatch.filter(filenames, '*.png'):
-            if 'cmap' in pred_filename or 'gt' in pred_filename:
-                continue
-            dirname = root.replace(args.pred_path, '')
-            pred_filenames.append(os.path.join(dirname, pred_filename))
+    # for root, dirnames, filenames in os.walk(args.pred_path):
+    #     for pred_filename in fnmatch.filter(filenames, '*.png'):
+    #         if 'cmap' in pred_filename or 'gt' in pred_filename:
+    #             continue
+    #         dirname = root.replace(args.pred_path, '')
+    #         pred_filenames.append(os.path.join(dirname, pred_filename))
+
+    with open(args.data_filenames_path, "r") as file:
+        for line in file:
+            img_name, depth_name = line.split()
+            pred_filenames.append(os.path.join(args.pred_path, img_name[1:]))
+            gt_filenames.append(os.path.join(args.gt_path, depth_name[1:]))
+    print('Reading filenames done')
+    print(gt_filenames[0])
 
     num_test_samples = len(pred_filenames)
 
     pred_depths = []
 
     for i in range(num_test_samples):
-        pred_depth_path = os.path.join(args.pred_path, pred_filenames[i])
+        # pred_depth_path = os.path.join(args.pred_path, pred_filenames[i])
+        pred_depth_path = pred_filenames[i]
         pred_depth = cv2.imread(pred_depth_path, -1)
         if pred_depth is None:
             print('Missing: %s ' % pred_depth_path)
@@ -107,11 +118,24 @@ def test():
     print('Evaluating {} files'.format(len(pred_depths)))
 
     if args.dataset == 'kitti':
-        for t_id in range(num_test_samples):
-            file_dir = pred_filenames[t_id].split('.')[0]
-            filename = file_dir.split('_')[-1]
-            directory = file_dir.replace('_' + filename, '')
-            gt_depth_path = os.path.join(args.gt_path, directory, 'proj_depth/groundtruth/image_02', filename + '.png')
+        # for t_id in range(num_test_samples):
+        #     file_dir = pred_filenames[t_id].split('.')[0]
+        #     filename = file_dir.split('_')[-1]
+        #     directory = file_dir.replace('_' + filename, '')
+        #     gt_depth_path = os.path.join(args.gt_path, directory, 'proj_depth/groundtruth/image_02', filename + '.png')
+        #     depth = cv2.imread(gt_depth_path, -1)
+        #     if depth is None:
+        #         print('Missing: %s ' % gt_depth_path)
+        #         missing_ids.add(t_id)
+        #         continue
+
+        #     depth = depth.astype(np.float32) / 256.0
+        #     gt_depths.append(depth)
+        for t_id, gt_depth_path in enumerate(gt_filenames):
+            # file_dir = pred_filenames[t_id].split('.')[0]
+            # filename = file_dir.split('_')[-1]
+            # directory = file_dir.replace('_' + filename, '')
+            # gt_depth_path = os.path.join(args.gt_path, directory, 'proj_depth/groundtruth/image_02', filename + '.png')
             depth = cv2.imread(gt_depth_path, -1)
             if depth is None:
                 print('Missing: %s ' % gt_depth_path)
