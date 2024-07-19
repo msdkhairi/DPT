@@ -27,6 +27,7 @@ dependencies:
       - debugpy==1.7.0
       - decorator==5.1.1
       - entrypoints==0.4
+      - imageio==2.31.2
       - ipykernel==6.16.2
       - ipython==7.34.0
       - jedi==0.19.1
@@ -55,4 +56,3 @@ dependencies:
       - traitlets==5.9.0
       - typing-extensions==4.7.1
       - wcwidth==0.2.13
-prefix: /home/conda/envs/dpt
